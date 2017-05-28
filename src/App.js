@@ -70,8 +70,8 @@ class App extends Component {
                         <h3>{item.city}</h3>
                         <ChartItem dataKey="t" data={item} name="temperature"/>
                         <ChartItem dataKey="h" data={item} name="humidity"/>
-                        <ChartItem dataKey="w" data={item} name="windth speed"/>
-                        <ChartItem dataKey="wd" data={item} name="windth direction"/>
+                        <ChartItem dataKey="w" data={item} name="wind speed"/>
+                        <ChartItem dataKey="wd" data={item} name="wind direction"/>
                         <TableItem data={item.stat}/>
                     </div>
                 ))}
