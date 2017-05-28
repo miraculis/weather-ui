@@ -1,77 +1,45 @@
 import React, {Component} from 'react';
+import $ from 'jquery';
+import Bacon from 'baconjs';
+import DatePicker from 'react-datepicker';
+import moment from 'moment';
 
-const data = {
-    data: [
-        {
-            city: 'New York', hourly: [
-            {time: 1, t: 100, h: 80, w: 10, wd: 90},
-            {time: 2, t: 90, h: 70, w: 20, wd: 80},
-            {time: 3, t: 80, h: 70, w: 20, wd: 80},
-            {time: 4, t: 190, h: 70, w: 20, wd: 80},
-            {time: 5, t: 290, h: 50, w: 20, wd: 80},
-        ], stat: {
-            t: {mu: 1, sigma: 0.1, min: 10, max: 100},
-            h: {mu: 1, sigma: 0.1, min: 10, max: 100},
-            w: {mu: 1, sigma: 0.1, min: 10, max: 100},
-            wd: {mu: 1, sigma: 0.1, min: 10, max: 100}
-        }
-        },
-        {
-            city: 'Maiami', hourly: [
-            {time: 1, t: 100, h: 80, w: 10, wd: 90},
-            {time: 2, t: 90, h: 70, w: 20, wd: 80},
-            {time: 3, t: 80, h: 70, w: 20, wd: 80},
-            {time: 4, t: 190, h: 70, w: 20, wd: 80},
-            {time: 5, t: 290, h: 50, w: 20, wd: 80},
-        ], stat: {
-            t: {mu: 1, sigma: 0.1, min: 10, max: 100},
-            h: {mu: 1, sigma: 0.1, min: 10, max: 100},
-            w: {mu: 1, sigma: 0.1, min: 10, max: 100},
-            wd: {mu: 1, sigma: 0.1, min: 10, max: 100}
-        }
-        },
-    ]
-};
+import 'react-datepicker/dist/react-datepicker.css';
 
 class Cities extends Component {
+    state = {cities: [''], et:moment(), st:moment()};
     constructor() {
         super();
-        this.state = {cities: [{name: ''}]};
     }
 
     handleSubmit = () => {
-        const {cities} = this.state;
-        console.log('submit ' + cities);
-        this.props.onDataChanged(data);
+        Bacon.fromPromise($.ajax({url : "/api?" + this.state.cities.reduce((string, city) => {return string + "city=" + city + "&";},"") +
+            "st=" + this.state.st + "&et=" + this.state.et})).onValue((v) => this.props.onDataChanged(v));
     }
 
     handleAddCity = () => {
-        this.setState({
-            cities: this.state.cities.concat([{name: ''}])
-        });
+        const {cities: xs, ...rest} = this.state;
+        this.setState({cities: [...xs, ''], ...rest});
     }
 
     handleRemoveCity = (idx) => () => {
-        this.setState({
-            cities: this.state.cities.filter((c, cidx) => idx !== cidx)
-        });
+        this.state.cities.splice(idx);
+        this.setState(this.state);
     }
 
     handleCityChange = (idx) => (evt) => {
-        const newCities = this.state.cities.map((city, cidx) => {
-            if (idx !== cidx) return city;
-            return {name: evt.target.value};
-        });
-
-        this.setState({cities: newCities});
+        this.state.cities.splice(idx, 1, evt.target.value);
+        this.setState(this.state);
     }
 
-    handleStChange = () => (evt) => {
-        this.setState({st:evt.target.value});
+    handleStChange = (date) => {
+        const {st:t, ...rest} = this.state;
+        this.setState({st:date, ...rest});
     }
 
-    handleEtChange = () => (evt) => {
-        this.setState({et:evt.target.value});
+    handleEtChange = (date) => {
+        const {et:t, ...rest} = this.state;
+        this.setState({et:date, ...rest});
     }
 
     render() {
@@ -84,23 +52,21 @@ class Cities extends Component {
                         <input
                             type="text"
                             placeholder={`city #${idx + 1} name`}
-                            value={city.name}
+                            value={city}
                             onChange={this.handleCityChange(idx)}
                         />
                         <button type="button" onClick={this.handleRemoveCity(idx)} className="small">-</button>
                     </div>
                 ))}
-                <button type="button" onClick={this.handleAddCity} className="small">+</button>
+                <button id="addcity" type="button" onClick={this.handleAddCity} className="small">+</button>
                 <div>
-                    <input
-                        type="datetime-local"
-                        value={this.state.st}
-                        onChange={this.handleStChange()}
+                    <DatePicker
+                        selected={this.state.st}
+                        onChange={this.handleStChange}
                     />
-                    <input
-                        type="datetime-local"
-                        value={this.state.et}
-                        onChange={this.handleEtChange()}
+                    <DatePicker
+                        selected={this.state.et}
+                        onChange={this.handleEtChange}
                     />
                 </div>
                 <button type="button" onClick={this.handleSubmit}>request</button>
